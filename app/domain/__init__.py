@@ -1,8 +1,8 @@
 
 def init_models():
     '''Initialize the database models'''
-    from app.domain.auth.models import User
-    from app.domain.blogs.models import Post
+    import app.domain.auth.models #import User, Role, Permission, PermissionRole, UserRole
+    import app.domain.blogs.models #import Post
 
 
 def install_extensions(app):
@@ -12,13 +12,30 @@ def install_extensions(app):
     from app.database import init_db
     init_db(app)
 
-    # TODO Flask-WTF
-
     # Flask-Login
     from app.domain.auth import init_auth_module
     init_auth_module(app)
 
-    # TODO Flask-Principal
+    # Flask-Principal
+    from flask_principal import Principal, identity_loaded, UserNeed, RoleNeed
+    Principal(app)
+
+    @identity_loaded.connect_via(app)
+    def on_identity_loaded(sender, identity):
+        from flask_login import current_user
+        # Set the identity user object
+        identity.user = current_user
+
+        # Add the UserNeed to the identity
+        if hasattr(current_user, 'id'):
+            identity.provides.add(UserNeed(current_user.id))
+
+        # Update the identity with the roles that the user provides
+        if hasattr(current_user, 'roles'):
+            for role in current_user.roles:
+                for permission in role.permissions:
+                    identity.provides.add(RoleNeed(permission.name))
+
 
     # TODO Flask-Security
 
@@ -77,6 +94,9 @@ def register_blueprints_in_app(app, ip_addr: str = None, server_port: int = None
 
     from .blogs.controllers import blogs_controller
     app.register_blueprint(blogs_controller.bp)
+
+    from .admin.controllers import manage_user_roles_controller
+    app.register_blueprint(manage_user_roles_controller.bp)
 
     return app
 

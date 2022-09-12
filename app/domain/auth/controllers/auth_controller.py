@@ -1,10 +1,10 @@
 from datetime import timedelta
-from sqlite3 import IntegrityError
 
 from flask import (
-    Blueprint, flash, redirect, render_template, request, url_for, abort
+    Blueprint, flash, redirect, render_template, request, url_for, abort, current_app
 )
 from flask_login import login_user, logout_user, login_required
+from flask_principal import Identity, AnonymousIdentity, identity_changed
 
 from sqlalchemy import exc
 from app.domain import is_safe_url
@@ -53,6 +53,9 @@ def login():
         else:
             login_user(user, remember=remember_me, duration=timedelta(days=1))
             
+            # Tell Flask-Principal the identity changed
+            identity_changed.send(current_app._get_current_object(), identity=Identity(user.id))
+
             next = request.args.get('next')
 
             if not is_safe_url(next):
@@ -67,4 +70,6 @@ def login():
 @login_required
 def logout():
     logout_user()
+    # Tell Flask-Principal the user is anonymous
+    identity_changed.send(current_app._get_current_object(), identity=AnonymousIdentity())
     return redirect(url_for('index'))

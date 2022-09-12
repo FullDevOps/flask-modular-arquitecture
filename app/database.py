@@ -14,3 +14,6 @@ def init_db(app):
     init_models()
     db.create_all()
         
+    # Inserting default permissions
+    from app.domain.auth.repositories.roles_perms_repository import RolesAndPermissionsRepository
+    RolesAndPermissionsRepository.insert_default_permissions()

@@ -12,6 +12,11 @@ class UserRepository:
         return check_password_hash(password_stored, password_input)
     
 
+    def get_all_users_for_form(self) -> list:
+        users = User.query.all()
+        return [(user.id, user.username) for user in users]
+
+
     def get_user_by_id(self, user_id: int) -> User:
         return User.query.get(user_id)
 
@@ -26,7 +31,8 @@ class UserRepository:
 
     
     def register_user(self, username: str, password: str) -> User | None:
-        user = User(username=username, password=generate_password_hash(password))
+        user = User(username=username, password=self.__hash_password(password))
         db.session.add(user)
         db.session.commit()
+        db.session.close()
         return user
