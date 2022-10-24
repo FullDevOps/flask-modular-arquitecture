@@ -12,8 +12,9 @@ s.close()
 
 app = create_app(ip_addr=ip_addr, server_port=server_port)
 
-ui = FlaskUI(app, host=ip_addr, port=server_port, maximized=True, idle_interval=400, close_server_on_exit=True)
+ui = FlaskUI(app, host=ip_addr, port=server_port, maximized=True, close_server_on_exit=True)
+
 
 if __name__ == "__main__":
-    #app.run()
+    # app.run(host=ip_addr, port=server_port, debug=True)
     ui.run()
