@@ -1,12 +1,12 @@
 from flask import (
-    Blueprint, flash, redirect, render_template, request, url_for
+    Blueprint, flash, redirect, render_template, request, url_for, abort
 )
-from werkzeug.exceptions import abort
 
 from flask_login import login_required, current_user
 from app.database import db
 from app.domain.auth.models import User
-from app.domain.blogs.models import Post
+from app.domain.blogs.forms import PostForm
+from app.domain.blogs.models import Comment, Post
 
 bp = Blueprint('blog', __name__, url_prefix='/blog')
 
@@ -26,23 +26,30 @@ def index():
 @bp.route('/create', methods=('GET', 'POST'))
 @login_required
 def create():
-    if request.method == 'POST':
-        title = request.form['title']
-        body = request.form['body']
-        error = None
 
-        if not title:
-            error = 'Title is required.'
+    form = PostForm()
 
-        if error is not None:
-            flash(error)
-        else:
-            post = Post(title=title, body=body, author_id=current_user.id)
-            db.session.add(post)
-            db.session.commit()
-            return redirect(url_for('blog.index'))
+    if form.validate_on_submit():
+        title = form.title.data
+        body = form.body.data
 
-    return render_template('blog/create.html')
+        post = Post(title=title, body=body, author_id=current_user.id)
+        db.session.add(post)
+        db.session.commit()
+
+        for comment in form.comments:
+            comment = Comment(body=comment.body.data, post_id=post.id)
+            db.session.add(comment)
+
+        db.session.commit()
+        return redirect(url_for('blog.index'))
+
+    comments_in_json = [ 
+        dict([('body', comment.body.data if comment.body.data else ''), ('errors', list(comment.body.errors))])
+        for comment in form.comments
+    ]
+
+    return render_template('blog/form.html', form = form, comments_in_json = comments_in_json)
 
 
 def get_post(id, check_author=True):
@@ -62,24 +69,25 @@ def get_post(id, check_author=True):
 def update(id):
     post = get_post(id)
 
-    if request.method == 'POST':
-        title = request.form['title']
-        body = request.form['body']
-        error = None
+    form = PostForm()
 
-        if not title:
-            error = 'Title is required.'
+    if request.method == 'GET':
+        form.title.data = post.title
+        form.body.data = post.body
 
-        if error is not None:
-            flash(error)
-        else:
-            post.title = title
-            post.body = body
-            db.session.commit()
+    if request.method == 'POST' and form.validate_on_submit():
+        post.title = form.title.data
+        post.body = form.body.data
+        db.session.commit()
 
-            return redirect(url_for('blog.index'))
+        return redirect(url_for('blog.index'))
 
-    return render_template('blog/update.html', post=post)
+    comments_in_json = [ 
+        # dict([('body', comment.body.data if comment.body.data else ''), ('errors', list(comment.body.errors))])
+        # for comment in form.comments
+    ]
+
+    return render_template('blog/form.html', form=form, comments_in_json=comments_in_json, hide_comments=True)
 
 
 @bp.route('/<int:id>/delete', methods=('POST',))

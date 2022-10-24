@@ -1,8 +1,8 @@
 
 def init_models():
     '''Initialize the database models'''
-    import app.domain.auth.models #import User, Role, Permission, PermissionRole, UserRole
-    import app.domain.blogs.models #import Post
+    import app.domain.auth.models as auth
+    import app.domain.blogs.models as blogs
 
 
 def install_extensions(app):
@@ -37,9 +37,9 @@ def install_extensions(app):
                     identity.provides.add(RoleNeed(permission.name))
 
 
-    # TODO Flask-Security
+    # Flask-Security
 
-    # TODO Bcrypt
+    # Bcrypt
 
     # Flask-Mail
 
