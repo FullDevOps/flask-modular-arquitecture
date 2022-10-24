@@ -22,7 +22,7 @@ pywin32-ctypes==0.2.0
 SQLAlchemy==1.4.40
 tinyaes==1.0.3
 waitress==2.1.2
-Werkzeug==2.1.2
+Werkzeug==2.2.2
 whichcraft==0.6.1
 wincertstore==0.2
 WTForms==3.0.1
