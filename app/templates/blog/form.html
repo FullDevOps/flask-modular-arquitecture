@@ -53,10 +53,11 @@
 </div>
 {% endblock %}
 
+{% set comment_js_variable = 'let comment_list = '+comments_in_json|safe %}
 {% block scripts %}
 <script src="https://cdn.jsdelivr.net/npm/vue/dist/vue.js"></script>
+<script> {{ comment_js_variable }} </script>
 <script>
-    var comment_list = {{ comments_in_json|safe }};
     const vueApp = new Vue({
         el: '#vapp',
         data: { 
