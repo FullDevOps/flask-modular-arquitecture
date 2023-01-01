@@ -1,4 +1,4 @@
-# Flask Layer Architecture Project Example
+# Flask Modular Architecture Project Example
 
 # Project installation
 To install the project package, run the following command:
